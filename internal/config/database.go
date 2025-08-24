@@ -5,8 +5,11 @@ import (
 	"log"
 	"os"
 
+	_ "database/sql"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 // Database структура для работы с БД
@@ -20,7 +23,7 @@ func NewDatabase() (*Database, error) {
 		log.Println("Не удалось загрузить файл .env")
 	}
 	//строка подключения
-	dataSourseName := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
+	dataSourseName := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_HOST"),
@@ -38,6 +41,7 @@ func NewDatabase() (*Database, error) {
 		return nil, fmt.Errorf("Ошибка ping БД: %v", err)
 	}
 	log.Println("Успешное подключение к БД")
+
 	//если подключение успешное, то возвращает готовую бд по структуре Database
 	return &Database{dataBase}, nil
 }
