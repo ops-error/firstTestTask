@@ -2,7 +2,8 @@ package repository
 
 import "firstTestTask/internal/config"
 
-// базовый репозиторий с общими методами
+// BaseRepository структура базового репозиторя с общими методами
+// Содержит указатель на
 type BaseRepository struct {
 	dataBase *config.Database
 }

@@ -17,13 +17,14 @@ type Database struct {
 	*sqlx.DB
 }
 
-// СОздание нового подключения к БД
+// NewDatabase создает новое подключение к БД
 func NewDatabase() (*Database, error) {
+	//проверяет наличие .env файла
 	if err := godotenv.Load(); err != nil {
 		log.Println("Не удалось загрузить файл .env")
 	}
 	//строка подключения
-	dataSourseName := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+	dataSourсeName := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_HOST"),
@@ -31,7 +32,7 @@ func NewDatabase() (*Database, error) {
 		os.Getenv("DB_NAME"),
 	)
 	//Коннект к БД
-	dataBase, err := sqlx.Connect("postgres", dataSourseName)
+	dataBase, err := sqlx.Connect("postgres", dataSourсeName)
 	if err != nil {
 		return nil, fmt.Errorf("Ошибка подключения к бд: %v", err)
 	}
@@ -40,7 +41,7 @@ func NewDatabase() (*Database, error) {
 	if err := dataBase.Ping(); err != nil {
 		return nil, fmt.Errorf("Ошибка ping БД: %v", err)
 	}
-	log.Println("Успешное подключение к БД")
+	fmt.Println("Успешное подключение к БД")
 
 	//если подключение успешное, то возвращает готовую бд по структуре Database
 	return &Database{dataBase}, nil
