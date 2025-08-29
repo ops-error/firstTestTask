@@ -33,7 +33,7 @@ func main() {
 	}()
 
 	//роутинг
-	router := apphttp.NewRouter()
+	router := apphttp.NewRouter(newDB)
 
 	serv := &http.Server{Addr: ":8080", Handler: router}
 	go func() {

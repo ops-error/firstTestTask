@@ -1,6 +1,7 @@
 package config
 
 import (
+	"firstTestTask/internal/migrate"
 	"fmt"
 	"log"
 	"os"
@@ -18,7 +19,7 @@ type Database struct {
 }
 
 // NewDatabase создает новое подключение к БД
-func NewDatabase() (*Database, error) {
+func NewDatabase() (*sqlx.DB, error) {
 	//проверяет наличие .env файла
 	if err := godotenv.Load(); err != nil {
 		log.Println("Не удалось загрузить файл .env")
@@ -31,6 +32,9 @@ func NewDatabase() (*Database, error) {
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_NAME"),
 	)
+	if err := migrate.RunMigrations(dataSourсeName); err != nil {
+		log.Fatalf("migration failed: %s", err)
+	}
 	//Коннект к БД
 	dataBase, err := sqlx.Connect("postgres", dataSourсeName)
 	if err != nil {
@@ -44,7 +48,7 @@ func NewDatabase() (*Database, error) {
 	fmt.Println("Успешное подключение к БД")
 
 	//если подключение успешное, то возвращает готовую бд по структуре Database
-	return &Database{dataBase}, nil
+	return dataBase, nil
 }
 
 func (db *Database) Close() error {
