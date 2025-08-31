@@ -5,6 +5,8 @@ import (
 	_ "database/sql"
 	"firstTestTask/internal/config"
 	apphttp "firstTestTask/internal/delivery/http"
+	"firstTestTask/internal/events"
+	"firstTestTask/internal/repository"
 	"fmt"
 	"log"
 	"net/http"
@@ -32,9 +34,13 @@ func main() {
 		newDB.Close()
 	}()
 
-	//роутинг
-	router := apphttp.NewRouter(newDB)
+	producer := events.NewProducer("localhost:9092")
+	defer producer.Close()
 
+	orderRepo := repository.NewOrderRepo(newDB, producer)
+
+	//роутинг
+	router := apphttp.NewRouter(orderRepo)
 	serv := &http.Server{Addr: ":8080", Handler: router}
 	go func() {
 		fmt.Println("HTTP ON 8080")
@@ -49,6 +55,7 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	go events.RunConsumer(ctx, "localhost:9092", orderRepo)
 	_ = serv.Shutdown(ctx)
 	log.Println("bye")
 }

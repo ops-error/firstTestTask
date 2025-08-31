@@ -5,12 +5,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jmoiron/sqlx"
 )
 
-func NewRouter(dataBase *sqlx.DB) *chi.Mux {
+func NewRouter(repo *repository.OrderRepo) *chi.Mux {
 	router := chi.NewRouter()
-	repo := repository.NewOrderRepo(dataBase)
 	router.Get("/", func(res http.ResponseWriter, _ *http.Request) {
 		res.Write([]byte("Hello World"))
 	})
