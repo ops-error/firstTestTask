@@ -3,9 +3,10 @@ package events
 import (
 	"context"
 	"encoding/json"
-	dto2 "firstTestTask/internal/models"
+	dto2 "firstTestTask/internal/dto"
 	"firstTestTask/internal/repository"
 	"log"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -16,6 +17,9 @@ func RunConsumer(ctx context.Context, address string, repo *repository.OrderRepo
 		Topic:       "orders.created",
 		GroupID:     "order-worker",
 		StartOffset: kafka.FirstOffset,
+		MinBytes:    1,
+		MaxBytes:    1 * 1024 * 1024,
+		MaxWait:     1 * time.Second,
 	})
 	defer reader.Close()
 

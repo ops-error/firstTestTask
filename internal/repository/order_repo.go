@@ -2,7 +2,8 @@ package repository
 
 import (
 	"context"
-	"firstTestTask/internal/events"
+	"firstTestTask/internal/dto"
+
 	"firstTestTask/internal/models"
 
 	"github.com/jmoiron/sqlx"
@@ -10,11 +11,10 @@ import (
 
 type OrderRepo struct {
 	dataBase *sqlx.DB
-	producer events.OrderEventProducer
 }
 
-func NewOrderRepo(dataBase *sqlx.DB, prod events.OrderEventProducer) *OrderRepo {
-	return &OrderRepo{dataBase, prod}
+func NewOrderRepo(dataBase *sqlx.DB) *OrderRepo {
+	return &OrderRepo{dataBase}
 }
 
 const queryFullOrder = `
@@ -103,11 +103,10 @@ func (repo *OrderRepo) GetFullOrder(ctx context.Context, uid string) (*models.Or
 		items = append(items, itm)
 	}
 	order.Items = items
-	_ = repo.producer.Send(ctx, models.OrderCreated{OrderUID: order.Order_uid})
 	return &order, nil
 }
 
-func (repo *OrderRepo) SaveOrder(ctx context.Context, dto models.OrderDTO) error {
+func (repo *OrderRepo) SaveOrder(ctx context.Context, dto dto.OrderDTO) error {
 	tx, err := repo.dataBase.BeginTx(ctx, nil)
 	if err != nil {
 		return err

@@ -5,7 +5,6 @@ import (
 	_ "database/sql"
 	"firstTestTask/internal/config"
 	apphttp "firstTestTask/internal/delivery/http"
-	"firstTestTask/internal/events"
 	"firstTestTask/internal/repository"
 	"fmt"
 	"log"
@@ -34,10 +33,10 @@ func main() {
 		newDB.Close()
 	}()
 
-	producer := events.NewProducer("localhost:9092")
-	defer producer.Close()
+	//producer := events.NewProducer("localhost:9092")
+	//defer producer.Close()
 
-	orderRepo := repository.NewOrderRepo(newDB, producer)
+	orderRepo := repository.NewOrderRepo(newDB)
 
 	//роутинг
 	router := apphttp.NewRouter(orderRepo)
@@ -49,13 +48,21 @@ func main() {
 		}
 	}()
 
+	//wg := sync.WaitGroup{}
+	//wg.Add(1)
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	go events.RunConsumer(ctx, "localhost:9092", orderRepo)
+	//go events.RunConsumer(ctx, "localhost:9092", orderRepo)
+	//go func() {
+	//	defer wg.Done()
+	//	events.RunConsumer(ctx, "localhost:8080", orderRepo)
+	//}()
+	//wg.Wait()
 	_ = serv.Shutdown(ctx)
 	log.Println("bye")
 }
