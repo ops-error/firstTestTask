@@ -15,8 +15,7 @@ CREATE TABLE orders (
 
 -- Создание таблицы delivery
 CREATE TABLE delivery (
-                          id SERIAL PRIMARY KEY,
-                          order_uid VARCHAR(255) REFERENCES orders(order_uid),
+                          order_uid VARCHAR(255) PRIMARY KEY REFERENCES orders(order_uid),
                           name VARCHAR(255),
                           phone VARCHAR(50),
                           zip VARCHAR(20),

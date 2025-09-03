@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"firstTestTask/internal/dto"
-
+	"firstTestTask/internal/domain"
 	"firstTestTask/internal/models"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -37,24 +37,39 @@ WHERE ord.order_uid = $1
 ORDER BY itm.chrt_id
 `
 const queryInsertOrder = `
-INSERT INTO orders (order_uid, track_number, entry, locale, internal_signature,
-                    customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO orders (
+    order_uid, track_number, entry, locale, internal_signature,
+    customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 ON CONFLICT (order_uid) DO UPDATE SET
+    track_number   = EXCLUDED.track_number,
+    entry          = EXCLUDED.entry,
+    locale         = EXCLUDED.locale,
+    internal_signature = EXCLUDED.internal_signature,
+    customer_id    = EXCLUDED.customer_id,
+    delivery_service = EXCLUDED.delivery_service,
+    shardkey       = EXCLUDED.shardkey,
+    sm_id          = EXCLUDED.sm_id,
+    date_created   = EXCLUDED.date_created,
+    oof_shard      = EXCLUDED.oof_shard;
 `
 const queryInsertDelivery = `
-INSERT INTO delivery (order_uid, name, phone, zip, city, address, region, email,)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO delivery (
+    order_uid, name, phone, zip, city, address, region, email
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 const queryInsertPayment = `
-INSERT INTO payment (transaction, request_id, currency, provider, amount,
-                     payment_dt, bank, delivery_cost, goods_total, custom_fee,)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+INSERT INTO payment (
+    transaction, request_id, currency, provider, amount,
+    payment_dt, bank, delivery_cost, goods_total, custom_fee
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+ON CONFLICT (transaction) DO NOTHING;
 `
 const queryInsertItems = `
-INSERT INTO items (order_uid, chrt_id, price, rid, name, sale,
-                   size, total_price, nm_id, brand, status)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO items (
+    order_uid, chrt_id, price, rid, name, sale,
+    size, total_price, nm_id, brand, status
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
 `
 
 func (repo *OrderRepo) GetFullOrder(ctx context.Context, uid string) (*models.Order, error) {
@@ -106,31 +121,35 @@ func (repo *OrderRepo) GetFullOrder(ctx context.Context, uid string) (*models.Or
 	return &order, nil
 }
 
-func (repo *OrderRepo) SaveOrder(ctx context.Context, dto dto.OrderDTO) error {
+func (repo *OrderRepo) SaveOrder(ctx context.Context, dto domain.OrderDTO) error {
 	tx, err := repo.dataBase.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 	//order
+	log.Println("order")
 	if _, err := tx.ExecContext(ctx, queryInsertOrder, dto.OrderUID, dto.TrackNumber,
 		dto.Entry, dto.Locale, dto.InternalSignature, dto.CustomerID, dto.DeliveryService,
 		dto.Shardkey, dto.SmID, dto.DateCreated, dto.OofShard); err != nil {
 		return err
 	}
 	//delivery
+	log.Println("delivery")
 	if _, err := tx.ExecContext(ctx, queryInsertDelivery, dto.OrderUID, dto.Delivery.Name,
 		dto.Delivery.Phone, dto.Delivery.Zip, dto.Delivery.City, dto.Delivery.Address,
 		dto.Delivery.Region, dto.Delivery.Email); err != nil {
 		return err
 	}
 	//payment
+	log.Println("payment")
 	if _, err := tx.ExecContext(ctx, queryInsertPayment, dto.Payment.Transaction, dto.Payment.RequestID,
 		dto.Payment.Currency, dto.Payment.Provider, dto.Payment.Amount, dto.Payment.PaymentDT,
 		dto.Payment.Bank, dto.Payment.DeliveryCost, dto.Payment.GoodsTotal, dto.Payment.CustomFee); err != nil {
 		return err
 	}
 	//items
+	log.Println("items")
 	for _, i := range dto.Items {
 		if _, err := tx.ExecContext(ctx, queryInsertItems, dto.OrderUID, i.ChrtID,
 			i.Price, i.Rid, i.Name, i.Sale, i.Size, i.TotalPrice, i.NmID, i.Brand, i.Status); err != nil {

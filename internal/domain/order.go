@@ -1,4 +1,4 @@
-package dto
+package domain
 
 import "time"
 
@@ -15,9 +15,9 @@ type OrderDTO struct {
 	CustomerID        string    `json:"customer_id"`
 	DeliveryService   string    `json:"delivery_service"`
 	Shardkey          string    `json:"shardkey"`
-	SmID              string    `json:"sm_id"`
+	SmID              int64     `json:"sm_id"`
 	DateCreated       time.Time `json:"date_created"`
-	OofShard          string    `json:"oof_shard"`
+	OofShard          int64     `json:"oof_shard"`
 
 	Delivery DeliveryDTO `json:"delivery"`
 	Payment  PaymentDTO  `json:"payment"`

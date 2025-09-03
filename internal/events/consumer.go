@@ -3,7 +3,7 @@ package events
 import (
 	"context"
 	"encoding/json"
-	dto2 "firstTestTask/internal/dto"
+	dto2 "firstTestTask/internal/domain"
 	"firstTestTask/internal/repository"
 	"log"
 	"time"

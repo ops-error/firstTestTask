@@ -6,10 +6,10 @@ import (
 	"firstTestTask/internal/config"
 	apphttp "firstTestTask/internal/delivery/http"
 	"firstTestTask/internal/repository"
+	"firstTestTask/internal/transport/kafka"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -37,6 +37,10 @@ func main() {
 	//defer producer.Close()
 
 	orderRepo := repository.NewOrderRepo(newDB)
+	cfg := config.Load()
+	cons := kafka.NewConsumer(cfg, orderRepo)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	//роутинг
 	router := apphttp.NewRouter(orderRepo)
@@ -48,21 +52,14 @@ func main() {
 		}
 	}()
 
-	//wg := sync.WaitGroup{}
-	//wg.Add(1)
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	<-stop
+	log.Println("consumer started")
+	if err := cons.Run(ctx); err != nil {
+		log.Fatal("consumer: %v", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	//go events.RunConsumer(ctx, "localhost:9092", orderRepo)
-	//go func() {
-	//	defer wg.Done()
-	//	events.RunConsumer(ctx, "localhost:8080", orderRepo)
-	//}()
-	//wg.Wait()
+
 	_ = serv.Shutdown(ctx)
 	log.Println("bye")
 }
