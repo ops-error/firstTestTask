@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"firstTestTask/internal/domain"
-	"firstTestTask/internal/models"
 	"log"
 
 	"github.com/jmoiron/sqlx"
@@ -72,7 +71,7 @@ INSERT INTO items (
 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
 `
 
-func (repo *OrderRepo) GetFullOrder(ctx context.Context, uid string) (*models.Order, error) {
+func (repo *OrderRepo) GetFullOrder(ctx context.Context, uid string) (*domain.OrderDTO, error) {
 	rows, err := repo.dataBase.QueryxContext(ctx, queryFullOrder, uid)
 	if err != nil {
 		return nil, err
@@ -80,37 +79,37 @@ func (repo *OrderRepo) GetFullOrder(ctx context.Context, uid string) (*models.Or
 	defer rows.Close()
 
 	var (
-		order models.Order
-		items []models.Item
+		order domain.OrderDTO
+		items []domain.ItemDTO
 	)
 	for rows.Next() {
 		var (
-			ord models.Order
-			del models.Delivery
-			pay models.Payment
-			itm models.Item
+			ord domain.OrderDTO
+			del domain.DeliveryDTO
+			pay domain.PaymentDTO
+			itm domain.ItemDTO
 		)
 
 		if err := rows.Scan(
 			//order
-			&ord.Order_uid, &ord.Track_number, &ord.Entry, &ord.Locale,
-			&ord.Internal_signature, &ord.Customer_id, &ord.Delivery_service,
-			&ord.Shardkey, &ord.Sm_id, &ord.Date_created, &ord.Oof_shard,
+			&ord.OrderUID, &ord.TrackNumber, &ord.Entry, &ord.Locale,
+			&ord.InternalSignature, &ord.CustomerID, &ord.DeliveryService,
+			&ord.Shardkey, &ord.SmID, &ord.DateCreated, &ord.OofShard,
 			//delivery
 			&del.Name, &del.Phone, &del.Zip, &del.City, &del.Address,
 			&del.Region, &del.Email,
 			//payment
-			&pay.Transaction, &pay.Request_id, &pay.Currency, &pay.Provider,
-			&pay.Amount, &pay.Payment_dt, &pay.Bank, &pay.Delivery_cost,
-			&pay.Goods_total, &pay.Custom_fee,
+			&pay.Transaction, &pay.RequestID, &pay.Currency, &pay.Provider,
+			&pay.Amount, &pay.PaymentDT, &pay.Bank, &pay.DeliveryCost,
+			&pay.GoodsTotal, &pay.CustomFee,
 			//item
-			&itm.Chrt_id, &itm.Price, &itm.Rid, &itm.Name, &itm.Sale,
-			&itm.Size, &itm.Total_price, &itm.Nm_id, &itm.Brand, &itm.Status,
+			&itm.ChrtID, &itm.Price, &itm.Rid, &itm.Name, &itm.Sale,
+			&itm.Size, &itm.TotalPrice, &itm.NmID, &itm.Brand, &itm.Status,
 		); err != nil {
 			return nil, err
 		}
 
-		if order.Order_uid == "" {
+		if order.OrderUID == "" {
 			order = ord
 			order.Delivery = del
 			order.Payment = pay
