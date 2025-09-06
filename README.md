@@ -28,3 +28,6 @@
 `kafka-console-producer \` \
 `--bootstrap-server localhost:9092 \` \
 `--topic create-order < /order.json`
+
+### Веб-приложение для отображения данных
+URL: https://ops-error.github.io/simple-front/

@@ -34,9 +34,6 @@ func main() {
 		newDB.Close()
 	}()
 
-	//producer := events.NewProducer("localhost:9092")
-	//defer producer.Close()
-
 	orderRepo := repository.NewOrderRepo(newDB)
 	cfg := config.Load()
 	cons := kafka.NewConsumer(cfg, orderRepo)
@@ -45,7 +42,7 @@ func main() {
 
 	//cors
 	corsConfig := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"https://ops-error.github.io"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,
