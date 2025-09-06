@@ -15,6 +15,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 //слои сервиса:
@@ -42,9 +43,18 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	//cors
+	corsConfig := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowCredentials: true,
+	})
+
 	//роутинг
 	router := apphttp.NewRouter(orderRepo)
-	serv := &http.Server{Addr: ":8080", Handler: router}
+	handler := corsConfig.Handler(router)
+	serv := &http.Server{Addr: ":8080", Handler: handler}
 	go func() {
 		fmt.Println("HTTP ON 8080")
 		if err := serv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
